@@ -1,4 +1,4 @@
-import discord, json, os, shutil
+import json, os, sys, shutil, discord
 from datetime import datetime
 from pathlib import Path
 
@@ -53,6 +53,7 @@ def loadJson(filename):
             output = json.load(json_file)
             json_file.close()
     except Exception as exp:
+        appendLog(f"Could not get contents of json file {filename} due to exception {exp}")
         output = {}
     return output
 
@@ -62,7 +63,8 @@ def getMsg(string):
     try:
         locale = loadJson(f'{path}/locale/{config["bot_locale"]}.json')
         return locale["messages"][string]
-    except:
+    except Exception as exp:
+        appendLog(f"Could not get locale string named {string} due to exception {exp}")
         return f"Could not get locale string {string}"
 
 def guildConfGet(guild, variable):
@@ -138,14 +140,14 @@ async def createUserVoice(vc, category, member):
         vc.guild.me: discord.PermissionOverwrite(read_messages=True, view_channel=True, manage_channels=True),
         member: discord.PermissionOverwrite(read_messages=True, view_channel=True, manage_channels=True)
     }
-    created_channel = await vc.guild.create_voice_channel(f"Канал {member.name}", category=category, overwrites=overwrites_channel)
+    created_channel = await vc.guild.create_voice_channel(getMsg("name_voice").format(member.name), category=category, overwrites=overwrites_channel)
     appendLog(f"Created voice channel {str(created_channel.id)} for user {str(member.id)}", guild=vc.guild.id)
     if not os.path.isdir(f"{path}/guilds/{str(created_channel.guild.id)}/channels"):
         os.mkdir(f"{path}/guilds/{str(created_channel.guild.id)}/channels")
     vc_file = f"{path}/guilds/{str(created_channel.guild.id)}/channels/{str(created_channel.id)}.json"
     chan["ownerid"] = member.id
     saveJson(chan, vc_file)
-    nomic_channel = await vc.guild.create_text_channel(f"без-микро-{str(created_channel.id)}", category=category, overwrites=overwrites_nomic, topic=f"Тектовый канал для комуникации без микрофона\nID голосовой комнаты: {str(created_channel.id)}")
+    nomic_channel = await vc.guild.create_text_channel(getMsg("name_nomic").format(created_channel.id), category=category, overwrites=overwrites_nomic, topic=getMsg("description_nomic").format(str(created_channel.id)))
     appendLog(f"Created nomic channel {str(nomic_channel.id)} for channel {str(created_channel.id)}", guild=vc.guild.id)
     chan["nomic"] = nomic_channel.id
     saveJson(chan, vc_file)

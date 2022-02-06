@@ -1,6 +1,7 @@
 {
     "messages": {
         "shutdown": "Shutting down...",
+        "locale_set": "Bot's locale has been changed to **English**",
         "help": "**List of command:**\n{0}• Set parent channel: `{1}channel CHANNEL-ID`\n• Set parent category: `{2}category CATEGORY-ID`\n• Set commands prefix: `{3}prefix SYMBOL`\n\nTo reset channel/category/prefix use `reset` as argument\n\nPlease note that channel/category name ≠ ID of channel/category",
         "help_owner": "• Turn off the bot: `{0}shutdown`\n",
         "command_in_dm": "Commands can only be executed on the server",
@@ -9,7 +10,7 @@
         "usage_category": "Correct usage: `{0}category CATEGORY-ID`\nPlease note that name of category ≠ ID of category.\nFind out more about it here: https://support.discord.com/hc/articles/206346498-Where-can-I-find-my-User-Server-Message-ID",
         "usage_prefix": "Correct usage: `{0}prefix SYMBOL`",
         "result_channel": "Voice channel **{0}** is now set as parent",
-        "result_category": "Category **{0}** is now ser as parent",
+        "result_category": "Category **{0}** is now set as parent",
         "result_prefix": "Command prefix **{0}** is now set as primary for this server",
         "warn_channel": "⚠ Parent channel is not set!\nFor the bot to work, you need to set parent channel: `{0}channel CHANNEL-ID`",
         "warn_category": "⚠ Parent category is not set!\nFor the bot to work, you need to set parent category: `{0}category CATEGORY-ID`",
@@ -25,6 +26,9 @@
         "unconfigured_category": "⚠ Parent category",
         "configured_prefix": "ℹ Commands prefix: `{0}`",
         "configured_channel": "☑ Parent channel: **{0}**",
-        "configured_category": "☑ Parent category: **{0}**"
+        "configured_category": "☑ Parent category: **{0}**",
+        "name_voice": "{0}'s channel",
+        "name_nomic": "no-mic-{0}",
+        "description_nomic": "Text channel for no mic communication\nVoice room ID: {0}"
     }
 }

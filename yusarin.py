@@ -1,4 +1,11 @@
-import discord, json, os
+import json, os, sys
+
+try:
+    import discord
+except Exception as exp:
+    print(f"Module discord.py is not installed. Make sure to run 'pip install -r requirements.txt' before first start")
+    sys.exit()
+
 from functions import *
 #from discord_slash import SlashCommand, SlashContext
 
