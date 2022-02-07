@@ -4,5 +4,7 @@
     "bot_token": "SET-BOT-TOKEN",
     "bot_prefix": "$",
     "bot_locale": "en",
-    "bot_activity": "How-Low-Hello - Keep on Burnin'"
+    "bot_activity": "How-Low-Hello - Keep on Burnin'",
+    "check_for_updates": true,
+    "auto_clear_trash": false
 }

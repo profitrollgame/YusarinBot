@@ -1,4 +1,9 @@
-import json, os, sys, shutil, discord
+import os
+import sys
+import json
+import shutil
+import discord
+
 from datetime import datetime
 from pathlib import Path
 
@@ -57,16 +62,6 @@ def loadJson(filename):
         output = {}
     return output
 
-def getMsg(string):
-    global path
-    config = loadJson("config.json")
-    try:
-        locale = loadJson(f'{path}/locale/{config["bot_locale"]}.json')
-        return locale["messages"][string]
-    except Exception as exp:
-        appendLog(f"Could not get locale string named {string} due to exception {exp}")
-        return f"Could not get locale string {string}"
-
 def guildConfGet(guild, variable):
     global path
     config = loadJson(f"{path}/guilds/{str(guild)}/config.json")
@@ -96,6 +91,28 @@ def guildConfReset(guild, variable):
         os.mkdir(f"{path}/guilds/{str(guild)}")
         os.mkdir(f"{path}/guilds/{str(guild)}/channels")
         saveJson(config, f"{path}/guilds/{str(guild)}/config.json")
+
+def guildLocaleGet(guild):
+    global path
+    config = loadJson(f"{path}/config.json")
+    try:
+        locale = guildConfGet(guild.id, "locale")
+    except:
+        return config["bot_locale"]
+    if locale is None:
+        return config["bot_locale"]
+    else:
+        return locale
+
+def getMsg(string, guild):
+    global path
+    config = loadJson("config.json")
+    try:
+        locale = loadJson(f'{path}/locale/{guildLocaleGet(guild)}.json')
+        return locale["messages"][string]
+    except Exception as exp:
+        appendLog(f"Could not get locale string named {string} due to exception {exp}")
+        return f"Could not get locale string {string}"
 
 def isUserVoice(vc):
     global path
@@ -140,14 +157,14 @@ async def createUserVoice(vc, category, member):
         vc.guild.me: discord.PermissionOverwrite(read_messages=True, view_channel=True, manage_channels=True),
         member: discord.PermissionOverwrite(read_messages=True, view_channel=True, manage_channels=True)
     }
-    created_channel = await vc.guild.create_voice_channel(getMsg("name_voice").format(member.name), category=category, overwrites=overwrites_channel)
+    created_channel = await vc.guild.create_voice_channel(getMsg("name_voice", vc.guild).format(member.name), category=category, overwrites=overwrites_channel)
     appendLog(f"Created voice channel {str(created_channel.id)} for user {str(member.id)}", guild=vc.guild.id)
     if not os.path.isdir(f"{path}/guilds/{str(created_channel.guild.id)}/channels"):
         os.mkdir(f"{path}/guilds/{str(created_channel.guild.id)}/channels")
     vc_file = f"{path}/guilds/{str(created_channel.guild.id)}/channels/{str(created_channel.id)}.json"
     chan["ownerid"] = member.id
     saveJson(chan, vc_file)
-    nomic_channel = await vc.guild.create_text_channel(getMsg("name_nomic").format(created_channel.id), category=category, overwrites=overwrites_nomic, topic=getMsg("description_nomic").format(str(created_channel.id)))
+    nomic_channel = await vc.guild.create_text_channel(getMsg("name_nomic", vc.guild).format(created_channel.id), category=category, overwrites=overwrites_nomic, topic=getMsg("description_nomic", vc.guild).format(str(created_channel.id)))
     appendLog(f"Created nomic channel {str(nomic_channel.id)} for channel {str(created_channel.id)}", guild=vc.guild.id)
     chan["nomic"] = nomic_channel.id
     saveJson(chan, vc_file)
@@ -171,7 +188,33 @@ async def changeNomicPerms(mode, vc, member):
         await nomic_channel.set_permissions(member, view_channel=False)
     else:
         await nomic_channel.set_permissions(member, view_channel=True)
-        
+
+async def clearTrash(client):
+    global path
+    if not os.path.isdir(f"{path}/guilds/"):
+        os.mkdir(f"{path}/guilds")
+    guilds_list = os.listdir(f"{path}/guilds/")
+    for guild in guilds_list:
+        guild_object = client.get_guild(int(guild))
+        if os.path.isdir(f"{path}/guilds/{guild}/channels"):
+            channels_list = os.listdir(f"{path}/guilds/{guild}/channels/")
+            for channel in channels_list:
+                channel_id = channel[:-5]
+                try:
+                    selected_channel = discord.utils.get(guild_object.voice_channels, id=int(channel_id))
+                    channel_owner = loadJson(f"{path}/guilds/{guild}/channels/{channel}")["ownerid"]
+                    remove_channel = True
+                    for member in selected_channel.members:
+                        if member.id == channel_owner:
+                            remove_channel = False
+                    if remove_channel:
+                        await removeUserVoice(selected_channel)
+                except:
+                    os.remove(f"{path}/guilds/{guild}/channels/{channel_id}.json")
+
+#async def autoClearTrash(client):
+    # execute clearTrash every 120 seconds
+
 async def guildConfigured(guild):
 
     output = {}
@@ -182,21 +225,21 @@ async def guildConfigured(guild):
             try:
                 if kind == "channel":
                     guild_object = discord.utils.get(guild.channels, id=guildConfGet(guild.id, kind))
-                    output[kind] = getMsg("configured_"+kind).format(guild_object.name)
+                    output[kind] = getMsg("configured_"+kind, guild).format(guild_object.name)
                 elif kind == "category":
                     guild_object = discord.utils.get(guild.categories, id=guildConfGet(guild.id, kind))
-                    output[kind] = getMsg("configured_"+kind).format(guild_object.name)
+                    output[kind] = getMsg("configured_"+kind, guild).format(guild_object.name)
                 elif kind == "prefix":
-                    output[kind] = getMsg("configured_"+kind).format(guildConfGet(guild.id, kind))
+                    output[kind] = getMsg("info_prefix", guild).format(guildConfGet(guild.id, kind))
             except Exception as exp:
                 if kind == "prefix":
-                    output[kind] = getMsg("unconfigured_"+kind).format(config["bot_prefix"])
+                    output[kind] = getMsg("info_prefix", guild).format(config["bot_prefix"])
                 else:
-                    output[kind] = getMsg("unconfigured_"+kind)
+                    output[kind] = getMsg("unconfigured_"+kind, guild)
         else:
             if kind == "prefix":
-                output[kind] = getMsg("unconfigured_"+kind).format(config["bot_prefix"])
+                output[kind] = getMsg("info_prefix", guild).format(config["bot_prefix"])
             else:
-                output[kind] = getMsg("unconfigured_"+kind)
+                output[kind] = getMsg("unconfigured_"+kind, guild)
 
-    return getMsg("server_config").format(output["prefix"], output["channel"], output["category"])
+    return getMsg("server_config", guild).format(output["prefix"], getMsg("info_locale", guild).format(getMsg("locale_name", guild)), output["channel"], output["category"])
