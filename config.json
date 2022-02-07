@@ -6,5 +6,6 @@
     "bot_locale": "en",
     "bot_activity": "How-Low-Hello - Keep on Burnin'",
     "check_for_updates": true,
-    "auto_clear_trash": false
+    "auto_clear_trash": false,
+    "auto_clear_timer": 120
 }
