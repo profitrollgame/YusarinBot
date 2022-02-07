@@ -32,6 +32,9 @@ Installation instructions are listed below. Please, make sure you have installed
 - "bot_prefix" - Default prefix for all bot commands [String]
 - "bot_locale" - Default language file of bot. Name of file in `locale` folder without extension is used [String]
 - "bot_activity" - The name (string) of the song bot will be listening to [String]
+- "check_for_updates" - Option that defines whether bot should check for a new version available [Boolean]
+- "auto_clear_trash" - Option that defines whether bot should clean all buggy inactive channels every "auto_clear_timer" seconds [Boolean]
+- "auto_clear_timer" - Option that defines how often "auto_clear_trash" will do its job [Integer]
 
 ## Extra
 1. Bot doesn't have any self updaters **yet**
