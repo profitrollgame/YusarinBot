@@ -3,7 +3,7 @@
         "shutdown": "Shutting down...",
         "locale_name": "English",
         "locale_set": "Bot's locale has been changed to `English`",
-        "help": "**List of command:**\n{0}• Set parent channel: `{1}channel CHANNEL-ID`\n• Set parent category: `{2}category CATEGORY-ID`\n• Set commands prefix: `{3}prefix SYMBOL`\n\nTo reset channel/category/prefix use `reset` as argument\n\nPlease note that channel/category name ≠ ID of channel/category",
+        "help": "**List of command:**\n{0}• Set parent channel: `{1}channel CHANNEL-ID`\n• Set parent category: `{2}category CATEGORY-ID`\n• Set commands prefix: `{3}prefix SYMBOL`\n• Change bot's locale on server `{4}locale LOCALE`\n\nTo reset channel/category/prefix use `reset` as argument\n\nPlease note that channel/category name ≠ ID of channel/category",
         "help_owner": "• Turn off the bot: `{0}shutdown`\n",
         "command_in_dm": "Commands can only be executed on the server",
         "command_forbidden": "To set up private channels, you need to have **Administrator** permission on the server",
