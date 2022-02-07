@@ -295,14 +295,14 @@ async def on_message(message):
     elif message.content.startswith(f"{prefix}help"):
         if message.author.id == config["owner"]:
             if message.guild is not None:
-                await message.channel.send(await guildConfigured(message.guild) + getMsg("help", message.guild).format(getMsg("help_owner", message.guild).format(prefix), prefix, prefix, prefix, prefix))
+                await message.channel.send(await guildConfigured(message.guild) + getMsg("help", message.guild).format(getMsg("help_owner", message.guild).format(prefix), prefix, prefix, prefix, prefix, prefix))
             else:
-                await message.channel.send(getMsg("help", message.guild).format(getMsg("help_owner", message.guild).format(prefix), prefix, prefix, prefix, prefix))
+                await message.channel.send(getMsg("help", message.guild).format(getMsg("help_owner", message.guild).format(prefix), prefix, prefix, prefix, prefix, prefix))
         else:
             if message.guild is not None:
-                await message.channel.send(await guildConfigured(message.guild) + getMsg("help").format("", prefix, prefix, prefix))
+                await message.channel.send(await guildConfigured(message.guild) + getMsg("help").format("", prefix, prefix, prefix, prefix))
             else:
-                await message.channel.send(getMsg("help", message.guild).format("", prefix, prefix, prefix))
+                await message.channel.send(getMsg("help", message.guild).format("", prefix, prefix, prefix, prefix))
 
 #if loadJson("config.json")["auto_clear_trash"]:
     # run func
