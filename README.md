@@ -26,6 +26,7 @@ Installation instructions are listed below. Please, make sure you have installed
 12. Bot is ready! Run it using `python yusarin.py`
 
 ## Config explanation
+- "debug" - Option that enabled more detailed log messages [Boolean]
 - "owner" - Discord ID of user who will be able to execute admin commands (`$shutdown` for example) [Integer]
 - "bot_name" - Name of your bot. Is not used anywhere yet [String]
 - "bot_token" - Token of your Discord bot [String]
