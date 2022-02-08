@@ -11,6 +11,19 @@ path = Path(__file__).resolve().parent
 
 log_size = 512
 
+# This is the default option for "debug" key in
+# file config.json, so if cebug is not set in it
+# bot will use this value instead.
+debug = False
+
+try:
+    with open(filename, 'r', encoding="utf-8") as json_file:
+        output = json.load(json_file)
+        json_file.close()
+    debug = output["debug"]
+except:
+    debug = debug
+
 # Check latest log size
 def checkSize():
     global path
@@ -34,12 +47,20 @@ def checkSize():
         pass
 
 # Append string to log
-def appendLog(message, guild="none"):
+def appendLog(message, guild=None, announce=True):
+    global debug
     global path
     
-    message_formatted = f'[{datetime.now().strftime("%d.%m.%Y")}] [{datetime.now().strftime("%H:%M:%S")}] [{str(guild)}] {message}'
+    if guild == None:
+        message_formatted = f'[{datetime.now().strftime("%d.%m.%Y")}] [{datetime.now().strftime("%H:%M:%S")}] {message}'
+    else:
+        if debug:
+            message_formatted = f'[{datetime.now().strftime("%d.%m.%Y")}] [{datetime.now().strftime("%H:%M:%S")}] [{guild} | {str(guild.id)}] {message}'
+        else:
+            message_formatted = f'[{datetime.now().strftime("%d.%m.%Y")}] [{datetime.now().strftime("%H:%M:%S")}] [{guild}] {message}'
     
-    print(message_formatted)
+    if announce:
+        print(message_formatted)
 
     checkSize()
 
@@ -53,50 +74,67 @@ def saveJson(value, filename):
         f.close()
 
 def loadJson(filename):
+    global debug
     try:
         with open(filename, 'r', encoding="utf-8") as json_file:
             output = json.load(json_file)
             json_file.close()
     except Exception as exp:
-        appendLog(f"Could not get contents of json file {filename} due to exception {exp}")
+        if debug:
+            appendLog(f"Could not load json file {filename} due to exception {exp}")
         output = {}
     return output
 
+def gotCommand(message):
+    global debug
+    if debug:
+        appendLog(f"Command '{message.content}' from {message.author} ({str(message.author.id)})", message.guild)
+    else:
+        appendLog(f"Command '{message.content}' from {message.author}", message.guild)
+
 def guildConfGet(guild, variable):
     global path
-    config = loadJson(f"{path}/guilds/{str(guild)}/config.json")
+    global debug
     try:
+        config = loadJson(f"{path}/guilds/{str(guild.id)}/config.json")
         return config[variable]
-    except:
+    except Exception as exp:
+        if debug:
+            appendLog(f"Could not get guild config key '{variable}' due to {exp}", guild)
         return None
 
 def guildConfSet(guild, variable, value):
     global path
-    config = loadJson(f"{path}/guilds/{str(guild)}/config.json")
+    config = loadJson(f"{path}/guilds/{str(guild.id)}/config.json")
     config[variable] = value
     try:
-        saveJson(config, f"{path}/guilds/{str(guild)}/config.json")
+        saveJson(config, f"{path}/guilds/{str(guild.id)}/config.json")
     except:
-        os.mkdir(f"{path}/guilds/{str(guild)}")
-        os.mkdir(f"{path}/guilds/{str(guild)}/channels")
-        saveJson(config, f"{path}/guilds/{str(guild)}/config.json")
+        os.mkdir(f"{path}/guilds/{str(guild.id)}")
+        os.mkdir(f"{path}/guilds/{str(guild.id)}/channels")
+        saveJson(config, f"{path}/guilds/{str(guild.id)}/config.json")
+    appendLog(f"Guild config key '{variable}' is now set to '{value}'", guild)
 
 def guildConfReset(guild, variable):
     global path
-    config = loadJson(f"{path}/guilds/{str(guild)}/config.json")
-    del config[variable]
     try:
-        saveJson(config, f"{path}/guilds/{str(guild)}/config.json")
-    except:
-        os.mkdir(f"{path}/guilds/{str(guild)}")
-        os.mkdir(f"{path}/guilds/{str(guild)}/channels")
-        saveJson(config, f"{path}/guilds/{str(guild)}/config.json")
+        config = loadJson(f"{path}/guilds/{str(guild.id)}/config.json")
+        del config[variable]
+        try:
+            saveJson(config, f"{path}/guilds/{str(guild.id)}/config.json")
+        except:
+            os.mkdir(f"{path}/guilds/{str(guild.id)}")
+            os.mkdir(f"{path}/guilds/{str(guild.id)}/channels")
+            saveJson(config, f"{path}/guilds/{str(guild.id)}/config.json")
+        appendLog(f"Guild config key '{variable}' has been reset", guild)
+    except Exception as exp:
+        appendLog(f"Could not reset guild config key '{variable}' due to {exp}", guild)
 
 def guildLocaleGet(guild):
     global path
     config = loadJson(f"{path}/config.json")
     try:
-        locale = guildConfGet(guild.id, "locale")
+        locale = guildConfGet(guild, "locale")
     except:
         return config["bot_locale"]
     if locale is None:
@@ -104,14 +142,14 @@ def guildLocaleGet(guild):
     else:
         return locale
 
-def getMsg(string, guild):
+def getMsg(string, guild=None):
     global path
     config = loadJson("config.json")
     try:
         locale = loadJson(f'{path}/locale/{guildLocaleGet(guild)}.json')
         return locale["messages"][string]
     except Exception as exp:
-        appendLog(f"Could not get locale string named {string} due to exception {exp}")
+        appendLog(f"Could not get locale string named {string} due to exception {exp}", guild)
         return f"Could not get locale string {string}"
 
 def isUserVoice(vc):
@@ -127,6 +165,7 @@ def isUserVoice(vc):
     
 async def removeUserVoice(vc):
     global path
+    global debug
     channels_list = os.listdir(f"{path}/guilds/{str(vc.guild.id)}/channels/")
     if f"{vc.id}.json" in channels_list:
         vc_file = f"{path}/guilds/{str(vc.guild.id)}/channels/{str(vc.id)}.json"
@@ -138,14 +177,21 @@ async def removeUserVoice(vc):
         os.remove(vc_file)
         
         await needed_channel.delete()
-        appendLog(f"Removed voice channel {str(needed_channel.id)} of user {str(vc_conf['ownerid'])}", guild=vc.guild.id)
+        if debug:
+            appendLog(f"Removed voice channel '{needed_channel}' ({str(needed_channel.id)}) of user with id {str(vc_conf['ownerid'])}", guild=vc.guild)
+        else:
+            appendLog(f"Removed voice channel '{needed_channel}' of user with id {str(vc_conf['ownerid'])}", guild=vc.guild)
         await nomic_channel.delete()
-        appendLog(f"Removed nomic channel {str(nomic_channel.id)} of channel {str(needed_channel.id)}", guild=vc.guild.id)
+        if debug:
+            appendLog(f"Removed nomic channel {nomic_channel} ({str(nomic_channel.id)}) of channel with id {str(needed_channel.id)}", guild=vc.guild)
+        else:
+            appendLog(f"Removed nomic channel '{nomic_channel}' of channel with id {str(needed_channel.id)}", guild=vc.guild)
     else:
         return
 
 async def createUserVoice(vc, category, member):
     global path
+    global debug
     chan = {}
     overwrites_channel = {
         vc.guild.default_role: discord.PermissionOverwrite(view_channel=True),
@@ -158,14 +204,20 @@ async def createUserVoice(vc, category, member):
         member: discord.PermissionOverwrite(read_messages=True, view_channel=True, manage_channels=True)
     }
     created_channel = await vc.guild.create_voice_channel(getMsg("name_voice", vc.guild).format(member.name), category=category, overwrites=overwrites_channel)
-    appendLog(f"Created voice channel {str(created_channel.id)} for user {str(member.id)}", guild=vc.guild.id)
+    if debug:
+        appendLog(f"Created voice channel '{created_channel}' ({str(created_channel.id)}) for user {member} ({str(member.id)})", guild=vc.guild)
+    else:
+        appendLog(f"Created voice channel '{created_channel}' for user {member}", guild=vc.guild)
     if not os.path.isdir(f"{path}/guilds/{str(created_channel.guild.id)}/channels"):
         os.mkdir(f"{path}/guilds/{str(created_channel.guild.id)}/channels")
     vc_file = f"{path}/guilds/{str(created_channel.guild.id)}/channels/{str(created_channel.id)}.json"
     chan["ownerid"] = member.id
     saveJson(chan, vc_file)
     nomic_channel = await vc.guild.create_text_channel(getMsg("name_nomic", vc.guild).format(created_channel.id), category=category, overwrites=overwrites_nomic, topic=getMsg("description_nomic", vc.guild).format(str(created_channel.id)))
-    appendLog(f"Created nomic channel {str(nomic_channel.id)} for channel {str(created_channel.id)}", guild=vc.guild.id)
+    if debug:
+        appendLog(f"Created nomic channel '{nomic_channel}' ({str(nomic_channel.id)}) for channel '{created_channel}' ({str(created_channel.id)})", guild=vc.guild)
+    else:
+        appendLog(f"Created nomic channel '{nomic_channel}' for channel '{created_channel}'", guild=vc.guild)
     chan["nomic"] = nomic_channel.id
     saveJson(chan, vc_file)
     return created_channel
@@ -221,16 +273,16 @@ async def guildConfigured(guild):
     config = loadJson("config.json")
 
     for kind in ["channel", "category", "prefix"]:
-        if guildConfGet(guild.id, kind) is not None:
+        if guildConfGet(guild, kind) is not None:
             try:
                 if kind == "channel":
-                    guild_object = discord.utils.get(guild.channels, id=guildConfGet(guild.id, kind))
+                    guild_object = discord.utils.get(guild.channels, id=guildConfGet(guild, kind))
                     output[kind] = getMsg("configured_"+kind, guild).format(guild_object.name)
                 elif kind == "category":
-                    guild_object = discord.utils.get(guild.categories, id=guildConfGet(guild.id, kind))
+                    guild_object = discord.utils.get(guild.categories, id=guildConfGet(guild, kind))
                     output[kind] = getMsg("configured_"+kind, guild).format(guild_object.name)
                 elif kind == "prefix":
-                    output[kind] = getMsg("info_prefix", guild).format(guildConfGet(guild.id, kind))
+                    output[kind] = getMsg("info_prefix", guild).format(guildConfGet(guild, kind))
             except Exception as exp:
                 if kind == "prefix":
                     output[kind] = getMsg("info_prefix", guild).format(config["bot_prefix"])

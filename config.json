@@ -1,4 +1,5 @@
 {
+    "debug": false,
     "owner": SET-OWNER-ID,
     "bot_name": "Yusa Nishimori",
     "bot_token": "SET-BOT-TOKEN",

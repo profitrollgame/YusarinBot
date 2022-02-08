@@ -1,6 +1,7 @@
 import os
 import sys
 import json
+import shutil
 import requests
 import threading
 
@@ -12,7 +13,7 @@ except Exception as exp:
 
 from functions import *
 pid = os.getpid()
-version = 1.1
+version = 1.2
 
 if loadJson("config.json")["check_for_updates"]:
     try:
@@ -37,9 +38,33 @@ async def on_ready():
     
     await clearTrash(client)
 
+@client.event
+async def on_guild_join(guild):
+    
+    global path
+    
+    os.mkdir(f"{path}/guilds/{str(guild.id)}")
+    os.mkdir(f"{path}/guilds/{str(guild.id)}/channels")
+    saveJson({}, f"{path}/guilds/{str(guild.id)}/config.json")
+    
+    appendLog(f"Joined guild '{guild}' with id {str(guild.id)}")
+
+@client.event
+async def on_guild_remove(guild):
+    
+    global path
+
+    try:
+        shutil.rmtree(f"{path}/guilds/{str(guild.id)}")
+    except:
+        pass
+    
+    appendLog(f"Left guild '{guild}' with id {str(guild.id)}")
 
 @client.event
 async def on_voice_state_update(member, before, after):
+
+    global debug
 
     config = loadJson("config.json")
 
@@ -64,15 +89,18 @@ async def on_voice_state_update(member, before, after):
                 await changeNomicPerms("deny", vc_from, member)
         if isUserVoice(vc_to):
             await changeNomicPerms("allow", vc_to, member)
-        if vc_to.id == guildConfGet(vc_to.guild.id, "channel"):
-            if guildConfGet(vc_to.guild.id, "category") is not None:
-                voice_chan = await createUserVoice(vc_to, discord.utils.get(vc_to.guild.categories, id=guildConfGet(vc_to.guild.id, "category")), member)
+        if vc_to.id == guildConfGet(vc_to.guild, "channel"):
+            if guildConfGet(vc_to.guild, "category") is not None:
+                voice_chan = await createUserVoice(vc_to, discord.utils.get(vc_to.guild.categories, id=guildConfGet(vc_to.guild, "category")), member)
                 try:
                     await member.move_to(voice_chan)
                 except:
                     await removeUserVoice(voice_chan)
             else:
-                appendLog(f"Category for guild {str(vc_to.guild.id)} is not set", guild=vc_to.guild.id)
+                if debug:
+                    appendLog(f"Category for guild {vc_to.guild} ({str(vc_to.guild.id)}) is not set", guild=vc_to.guild)
+                else:
+                    appendLog(f"Category for guild {vc_to.guild} is not set", guild=vc_to.guild)
 
 # ==========================================================================================
 
@@ -83,7 +111,7 @@ async def on_message(message):
     
     if message.guild is not None:
         try:
-            prefix = guildConfGet(message.guild.id, "prefix")
+            prefix = guildConfGet(message.guild, "prefix")
             if prefix is None:
                 prefix = config["bot_prefix"]
         except Exception as exp:
@@ -98,6 +126,8 @@ async def on_message(message):
 
     if message.content in [f"{prefix}reboot", f"{prefix}restart", f"{prefix}shutdown", f"{prefix}die"]:
         
+        gotCommand(message)
+        
         if message.author.id == config["owner"]:
             
             await message.channel.send(getMsg("shutdown", message.guild))
@@ -109,6 +139,8 @@ async def on_message(message):
         
     elif message.content.startswith(f"{prefix}channel"):
         
+        gotCommand(message)
+        
         fullcmd = message.content.split()
         
         if message.guild is not None:
@@ -119,9 +151,9 @@ async def on_message(message):
                     
                     if fullcmd[1] == "reset":
                         
-                        if guildConfGet(message.guild.id, "channel") is not None:
+                        if guildConfGet(message.guild, "channel") is not None:
                             
-                            guildConfReset(message.guild.id, "channel")
+                            guildConfReset(message.guild, "channel")
                             
                             await message.channel.send(getMsg("reset_channel", message.guild))
                             
@@ -133,11 +165,11 @@ async def on_message(message):
                     
                         selected_channel = discord.utils.get(message.guild.channels, id=int(fullcmd[1]))
                         
-                        guildConfSet(message.guild.id, "channel", int(fullcmd[1]))
+                        guildConfSet(message.guild, "channel", int(fullcmd[1]))
                         
                         await message.channel.send(getMsg("result_channel", message.guild).format(selected_channel.name))
                         
-                        if guildConfGet(message.guild.id, "category") is None:
+                        if guildConfGet(message.guild, "category") is None:
                             
                             await message.channel.send(getMsg("warn_category", message.guild).format(prefix))
                     
@@ -152,9 +184,11 @@ async def on_message(message):
                 await message.channel.send(getMsg("command_forbidden", message.guild))
 
         else:
-            await message.channel.send(getMsg("command_in_dm", message.guild))
+            await message.channel.send(getMsg("command_in_dm"))
         
     elif message.content.startswith(f"{prefix}category"):
+        
+        gotCommand(message)
         
         fullcmd = message.content.split()
         
@@ -166,9 +200,9 @@ async def on_message(message):
                 
                     if fullcmd[1] == "reset":
                         
-                        if guildConfGet(message.guild.id, "category") is not None:
+                        if guildConfGet(message.guild, "category") is not None:
                         
-                            guildConfReset(message.guild.id, "category")
+                            guildConfReset(message.guild, "category")
                             
                             await message.channel.send(getMsg("reset_category", message.guild))
                             
@@ -180,11 +214,11 @@ async def on_message(message):
                     
                         selected_category = discord.utils.get(message.guild.channels, id=int(fullcmd[1]))
                         
-                        guildConfSet(message.guild.id, "category", int(fullcmd[1]))
+                        guildConfSet(message.guild, "category", int(fullcmd[1]))
                         
                         await message.channel.send(getMsg("result_category", message.guild).format(selected_category.name))
                         
-                        if guildConfGet(message.guild.id, "channel") is None:
+                        if guildConfGet(message.guild, "channel") is None:
                             
                             await message.channel.send(getMsg("warn_channel", message.guild).format(prefix))
                     
@@ -199,9 +233,11 @@ async def on_message(message):
                 await message.channel.send(getMsg("command_forbidden", message.guild))
             
         else:
-            await message.channel.send(getMsg("command_in_dm", message.guild))
+            await message.channel.send(getMsg("command_in_dm"))
 
     elif message.content.startswith(f"{prefix}prefix"):
+        
+        gotCommand(message)
         
         fullcmd = message.content.split()
         
@@ -213,9 +249,9 @@ async def on_message(message):
                 
                     if fullcmd[1] == "reset":
                     
-                        if guildConfGet(message.guild.id, "prefix") is not None:
+                        if guildConfGet(message.guild, "prefix") is not None:
                         
-                            guildConfReset(message.guild.id, "prefix")
+                            guildConfReset(message.guild, "prefix")
                             
                             await message.channel.send(getMsg("reset_prefix", message.guild).format(config["bot_prefix"]))
                             
@@ -225,7 +261,7 @@ async def on_message(message):
                         
                     else:
                         
-                        guildConfSet(message.guild.id, "prefix", fullcmd[1])
+                        guildConfSet(message.guild, "prefix", fullcmd[1])
                         
                         await message.channel.send(getMsg("result_prefix", message.guild).format(fullcmd[1]))
                     
@@ -237,9 +273,11 @@ async def on_message(message):
                 await message.channel.send(getMsg("command_forbidden", message.guild))
             
         else:
-            await message.channel.send(getMsg("command_in_dm", message.guild))
+            await message.channel.send(getMsg("command_in_dm"))
 
     elif message.content.startswith(f"{prefix}locale"):
+        
+        gotCommand(message)
         
         fullcmd = message.content.split()
         
@@ -251,10 +289,10 @@ async def on_message(message):
                 
                     if fullcmd[1] == "reset":
                     
-                        if guildConfGet(message.guild.id, "locale") is not None:
+                        if guildConfGet(message.guild, "locale") is not None:
                         
-                            guildConfReset(message.guild.id, "locale")
-                            appendLog(f"Server's locale has been reset", message.guild.id)
+                            guildConfReset(message.guild, "locale")
+                            appendLog(f"Server's locale has been reset", message.guild)
                             await message.channel.send(getMsg("reset_locale", message.guild).format(getMsg("locale_name", message.guild)))
                             
                         else:
@@ -265,8 +303,8 @@ async def on_message(message):
                         
                         for locale_file in os.listdir(f"{path}/locale/"):
                             if locale_file[:-5] == fullcmd[1]:
-                                guildConfSet(message.guild.id, "locale", fullcmd[1])
-                                appendLog(f"Server's locale is now set to {fullcmd[1]}", message.guild.id)
+                                guildConfSet(message.guild, "locale", fullcmd[1])
+                                appendLog(f"Server's locale is now set to {fullcmd[1]}", message.guild)
                                 await message.channel.send(getMsg("locale_set", message.guild))
                                 return
                          
@@ -290,19 +328,22 @@ async def on_message(message):
                 await message.channel.send(getMsg("command_forbidden", message.guild))
             
         else:
-            await message.channel.send(getMsg("command_in_dm", message.guild))
+            await message.channel.send(getMsg("command_in_dm"))
 
     elif message.content.startswith(f"{prefix}help"):
+        
+        gotCommand(message)
+        
         if message.author.id == config["owner"]:
             if message.guild is not None:
                 await message.channel.send(await guildConfigured(message.guild) + getMsg("help", message.guild).format(getMsg("help_owner", message.guild).format(prefix), prefix, prefix, prefix, prefix, prefix))
             else:
-                await message.channel.send(getMsg("help", message.guild).format(getMsg("help_owner", message.guild).format(prefix), prefix, prefix, prefix, prefix, prefix))
+                await message.channel.send(getMsg("help").format(getMsg("help_owner").format(prefix), prefix, prefix, prefix, prefix, prefix))
         else:
             if message.guild is not None:
-                await message.channel.send(await guildConfigured(message.guild) + getMsg("help").format("", prefix, prefix, prefix, prefix))
+                await message.channel.send(await guildConfigured(message.guild) + getMsg("help", message.guild).format("", prefix, prefix, prefix, prefix))
             else:
-                await message.channel.send(getMsg("help", message.guild).format("", prefix, prefix, prefix, prefix))
+                await message.channel.send(getMsg("help").format("", prefix, prefix, prefix, prefix))
 
 #if loadJson("config.json")["auto_clear_trash"]:
     # run func
