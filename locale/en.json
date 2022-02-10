@@ -16,6 +16,7 @@
         "result_prefix": "Command prefix **{0}** is now set as primary for this server",
         "warn_channel": "⚠ Parent channel is not set!\nFor the bot to work, you need to set parent channel: `{0}channel CHANNEL-ID`",
         "warn_category": "⚠ Parent category is not set!\nFor the bot to work, you need to set parent category: `{0}category CATEGORY-ID`",
+        "warn_text_channel": "⚠ Selected channel is a text channel!\nPlease, use an ID of the voice channel instead.",
         "reset_channel": "Parent voice channel has been reset",
         "reset_category": "Parent category has been reset",
         "reset_prefix": "Commands prefix has been reset and now is `{0}`",

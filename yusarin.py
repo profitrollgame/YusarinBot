@@ -13,7 +13,7 @@ except Exception as exp:
 
 from functions import *
 pid = os.getpid()
-version = 1.2
+version = 1.3
 
 if loadJson("config.json")["check_for_updates"]:
     try:
@@ -164,18 +164,26 @@ async def on_message(message):
                     else:
                     
                         selected_channel = discord.utils.get(message.guild.channels, id=int(fullcmd[1]))
+
+                        if isinstance(selected_channel, discord.VoiceChannel):
                         
-                        guildConfSet(message.guild, "channel", int(fullcmd[1]))
+                            guildConfSet(message.guild, "channel", int(fullcmd[1]))
                         
-                        await message.channel.send(getMsg("result_channel", message.guild).format(selected_channel.name))
+                            await message.channel.send(getMsg("result_channel", message.guild).format(selected_channel.name))
                         
-                        if guildConfGet(message.guild, "category") is None:
+                            if guildConfGet(message.guild, "category") is None:
                             
-                            await message.channel.send(getMsg("warn_category", message.guild).format(prefix))
-                    
+                                await message.channel.send(getMsg("warn_category", message.guild).format(prefix))
+                
+                        else:
+
+                            print(type(selected_channel))
+
+                            await message.channel.send(getMsg("warn_text_channel", message.guild))
+    
                 except Exception as exp:
                     
-                    #print(exp)
+                    print(exp)
                     
                     await message.channel.send(getMsg("usage_channel", message.guild).format(prefix))
                 

@@ -17,7 +17,7 @@ log_size = 512
 debug = False
 
 try:
-    with open(filename, 'r', encoding="utf-8") as json_file:
+    with open("config.json", 'r', encoding="utf-8") as json_file:
         output = json.load(json_file)
         json_file.close()
     debug = output["debug"]
@@ -151,6 +151,10 @@ def getMsg(string, guild=None):
     except Exception as exp:
         appendLog(f"Could not get locale string named {string} due to exception {exp}", guild)
         return f"Could not get locale string {string}"
+
+def getEmbed(string, guild=None):
+    # Feature coming soon
+    pass
 
 def isUserVoice(vc):
     global path
