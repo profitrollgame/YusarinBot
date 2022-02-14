@@ -26,13 +26,20 @@ Installation instructions are listed below. Please, make sure you have installed
 12. Bot is ready! Run it using `python yusarin.py`
 
 ## Config explanation
-- "debug" - Option that enabled more detailed log messages [Boolean]
+Default configuration file is [available here](https://github.com/profitrollgame/YusarinBot/blob/main/config.json)
+- "debug" - Option that enables more detailed log messages [Boolean]
 - "owner" - Discord ID of user who will be able to execute admin commands (`$shutdown` for example) [Integer]
 - "bot_name" - Name of your bot. Is not used anywhere yet [String]
 - "bot_token" - Token of your Discord bot [String]
 - "bot_prefix" - Default prefix for all bot commands [String]
 - "bot_locale" - Default language file of bot. Name of file in `locale` folder without extension is used [String]
 - "bot_activity" - The name (string) of the song bot will be listening to [String]
+- "color_default" - HTML color used in help messages embed [String]
+- "color_ok" - HTML color used on command success embed [String]
+- "color_warn" - HTML color used in all warning embeds [String]
+- "color_error" - HTML color used on command error embed [String]
+- "bot_site" - http or https link that will be used in help message header [String]
+- "bot_icon" - http or https link that will be used in help message header's icon [String]
 - "check_for_updates" - Option that defines whether bot should check for a new version available [Boolean]
 - "auto_clear_trash" - Option that defines whether bot should clean all buggy inactive channels every "auto_clear_timer" seconds [Boolean]
 - "auto_clear_timer" - Option that defines how often "auto_clear_trash" will do its job [Integer]
