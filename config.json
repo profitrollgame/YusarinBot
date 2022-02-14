@@ -1,11 +1,17 @@
 {
     "debug": false,
-    "owner": SET-OWNER-ID,
+    "owner": "SET-OWNER-ID",
     "bot_name": "Yusa Nishimori",
     "bot_token": "SET-BOT-TOKEN",
     "bot_prefix": "$",
     "bot_locale": "en",
     "bot_activity": "How-Low-Hello - Keep on Burnin'",
+    "color_default": "#F2C48D",
+    "color_ok": "#226699",
+    "color_warn": "#FFCC4D",
+    "color_error": "#DD2E44",
+    "bot_site": "https://www.end-play.xyz/yusarin",
+    "bot_icon": "https://www.end-play.xyz/yusarin/logo",
     "check_for_updates": true,
     "auto_clear_trash": false,
     "auto_clear_timer": 120

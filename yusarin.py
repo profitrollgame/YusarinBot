@@ -13,7 +13,11 @@ except Exception as exp:
 
 from functions import *
 pid = os.getpid()
-version = 1.3
+version = 1.4
+
+if loadJson("config.json")["owner"] == "SET-OWNER-ID" or loadJson("config.json")["bot_token"] == "SET-BOT-TOKEN":
+    print(f"Bot is not correctly configured.\nMake sure you've set up owner id and bot token in {path}/config.json\nLearn more here: https://github.com/profitrollgame/YusarinBot")
+    sys.exit()
 
 if loadJson("config.json")["check_for_updates"]:
     try:
@@ -130,7 +134,7 @@ async def on_message(message):
         
         if message.author.id == config["owner"]:
             
-            await message.channel.send(getMsg("shutdown", message.guild))
+            await message.reply(embed=makeEmbed(description=getMsg("shutdown", message.guild).format(message.author), color=strToColor(config["color_default"])), mention_author=False)
             os.system(f"kill -9 {str(pid)}")
             
         else:
@@ -155,11 +159,11 @@ async def on_message(message):
                             
                             guildConfReset(message.guild, "channel")
                             
-                            await message.channel.send(getMsg("reset_channel", message.guild))
+                            await message.reply(embed=makeEmbed(title=getMsg("reset_channel_title", message.guild), description=getMsg("reset_channel_description", message.guild).format(prefix), color=strToColor(config["color_ok"])), mention_author=False)
                             
                         else:
                             
-                            await message.channel.send(getMsg("none_channel", message.guild))
+                            await message.reply(embed=makeEmbed(title=getMsg("hint_none_channel_title", message.guild), description=getMsg("hint_none_channel_description", message.guild).format(prefix), color=strToColor(config["color_warn"])), mention_author=False)
                         
                     else:
                     
@@ -168,31 +172,30 @@ async def on_message(message):
                         if isinstance(selected_channel, discord.VoiceChannel):
                         
                             guildConfSet(message.guild, "channel", int(fullcmd[1]))
-                        
-                            await message.channel.send(getMsg("result_channel", message.guild).format(selected_channel.name))
+                            
+                            await message.reply(embed=makeEmbed(title=getMsg("set_channel_title", message.guild), description=getMsg("set_channel_description", message.guild).format(selected_channel.name), color=strToColor(config["color_ok"])), mention_author=False)
                         
                             if guildConfGet(message.guild, "category") is None:
                             
-                                await message.channel.send(getMsg("warn_category", message.guild).format(prefix))
+                                await message.channel.send(embed=makeEmbed(title=getMsg("hint_none_category_title", message.guild), description=getMsg("hint_none_category_description", message.guild).format(prefix), color=strToColor(config["color_warn"])))
                 
                         else:
 
-                            print(type(selected_channel))
-
-                            await message.channel.send(getMsg("warn_text_channel", message.guild))
+                            await message.reply(embed=makeEmbed(title=getMsg("error_text_channel_title", message.guild), description=getMsg("error_text_channel_description", message.guild), color=strToColor(config["color_error"])), mention_author=False)
     
                 except Exception as exp:
                     
-                    print(exp)
+                    if debug:
+                        print(exp)
                     
-                    await message.channel.send(getMsg("usage_channel", message.guild).format(prefix))
+                    await message.reply(embed=makeEmbed(title=getMsg("error_channel_title", message.guild), description=getMsg("error_channel_description", message.guild).format(prefix), footer=getMsg("help_notice_id", message.guild), color=strToColor(config["color_error"])), mention_author=False)
                 
             else:
                 
-                await message.channel.send(getMsg("command_forbidden", message.guild))
+                await message.reply(embed=makeEmbed(title=getMsg("forbidden_title", message.guild), description=getMsg("forbidden_description", message.guild), color=strToColor(config["color_error"])), mention_author=False)
 
         else:
-            await message.channel.send(getMsg("command_in_dm"))
+            await message.reply(embed=makeEmbed(title=getMsg("dm_title", message.guild), description=getMsg("dm_description", message.guild), color=strToColor(config["color_error"])), mention_author=False)
         
     elif message.content.startswith(f"{prefix}category"):
         
@@ -212,11 +215,11 @@ async def on_message(message):
                         
                             guildConfReset(message.guild, "category")
                             
-                            await message.channel.send(getMsg("reset_category", message.guild))
+                            await message.reply(embed=makeEmbed(title=getMsg("reset_category_title", message.guild), description=getMsg("reset_category_description", message.guild).format(prefix), color=strToColor(config["color_ok"])), mention_author=False)
                             
                         else:
                             
-                            await message.channel.send(getMsg("none_category", message.guild))
+                            await message.reply(embed=makeEmbed(title=getMsg("hint_none_category_title", message.guild), description=getMsg("hint_none_category_description", message.guild).format(prefix), color=strToColor(config["color_warn"])), mention_author=False)
                         
                     else:
                     
@@ -224,24 +227,25 @@ async def on_message(message):
                         
                         guildConfSet(message.guild, "category", int(fullcmd[1]))
                         
-                        await message.channel.send(getMsg("result_category", message.guild).format(selected_category.name))
+                        await message.reply(embed=makeEmbed(title=getMsg("set_category_title", message.guild), description=getMsg("set_category_description", message.guild).format(selected_category.name), color=strToColor(config["color_ok"])), mention_author=False)
                         
                         if guildConfGet(message.guild, "channel") is None:
                             
-                            await message.channel.send(getMsg("warn_channel", message.guild).format(prefix))
+                            await message.channel.send(embed=makeEmbed(title=getMsg("hint_none_channel_title", message.guild), description=getMsg("hint_none_channel_description", message.guild).format(prefix), color=strToColor(config["color_warn"])))
                     
                 except Exception as exp:
                 
-                    #print(exp)
+                    if debug:
+                        print(exp)
                     
-                    await message.channel.send(getMsg("usage_category", message.guild).format(prefix))
+                    await message.reply(embed=makeEmbed(title=getMsg("error_category_title", message.guild), description=getMsg("error_category_description", message.guild).format(prefix), footer=getMsg("help_notice_id_category", message.guild), color=strToColor(config["color_error"])), mention_author=False)
                 
             else:
                 
-                await message.channel.send(getMsg("command_forbidden", message.guild))
+                await message.reply(embed=makeEmbed(title=getMsg("forbidden_title", message.guild), description=getMsg("forbidden_description", message.guild), color=strToColor(config["color_error"])), mention_author=False)
             
         else:
-            await message.channel.send(getMsg("command_in_dm"))
+            await message.reply(embed=makeEmbed(title=getMsg("dm_title", message.guild), description=getMsg("dm_description", message.guild), color=strToColor(config["color_error"])), mention_author=False)
 
     elif message.content.startswith(f"{prefix}prefix"):
         
@@ -261,27 +265,27 @@ async def on_message(message):
                         
                             guildConfReset(message.guild, "prefix")
                             
-                            await message.channel.send(getMsg("reset_prefix", message.guild).format(config["bot_prefix"]))
+                            await message.reply(embed=makeEmbed(title=getMsg("reset_prefix_title", message.guild), description=getMsg("reset_prefix_description", message.guild).format(config["bot_prefix"], config["bot_prefix"]), color=strToColor(config["color_ok"])), mention_author=False)
                             
                         else:
                             
-                            await message.channel.send(getMsg("none_prefix", message.guild).format(prefix))
+                            await message.reply(embed=makeEmbed(title=getMsg("hint_none_prefix_title", message.guild), description=getMsg("hint_none_prefix_description", message.guild).format(prefix, prefix), color=strToColor(config["color_warn"])), mention_author=False)
                         
                     else:
                         
                         guildConfSet(message.guild, "prefix", fullcmd[1])
                         
-                        await message.channel.send(getMsg("result_prefix", message.guild).format(fullcmd[1]))
+                        await message.reply(embed=makeEmbed(title=getMsg("set_prefix_title", message.guild), description=getMsg("set_prefix_description", message.guild).format(fullcmd[1]), color=strToColor(config["color_ok"])), mention_author=False)
                     
                 except:
                     
-                    await message.channel.send(getMsg("usage_prefix", message.guild).format(prefix))
+                    await message.reply(embed=makeEmbed(title=getMsg("error_prefix_title", message.guild), description=getMsg("error_prefix_description", message.guild).format(prefix), color=strToColor(config["color_error"])), mention_author=False)
                 
             else:
-                await message.channel.send(getMsg("command_forbidden", message.guild))
+                await message.reply(embed=makeEmbed(title=getMsg("forbidden_title", message.guild), description=getMsg("forbidden_description", message.guild), color=strToColor(config["color_error"])), mention_author=False)
             
         else:
-            await message.channel.send(getMsg("command_in_dm"))
+            await message.reply(embed=makeEmbed(title=getMsg("dm_title", message.guild), description=getMsg("dm_description", message.guild), color=strToColor(config["color_error"])), mention_author=False)
 
     elif message.content.startswith(f"{prefix}locale"):
         
@@ -301,11 +305,11 @@ async def on_message(message):
                         
                             guildConfReset(message.guild, "locale")
                             appendLog(f"Server's locale has been reset", message.guild)
-                            await message.channel.send(getMsg("reset_locale", message.guild).format(getMsg("locale_name", message.guild)))
+                            await message.reply(embed=makeEmbed(title=getMsg("reset_locale_title", message.guild), description=getMsg("reset_locale_description", message.guild).format(getMsg("locale_name", message.guild), prefix), color=strToColor(config["color_ok"])), mention_author=False)
                             
                         else:
                             
-                            await message.channel.send(getMsg("none_locale", message.guild).format(getMsg("locale_name", message.guild)))
+                            await message.reply(embed=makeEmbed(title=getMsg("hint_none_locale_title", message.guild), description=getMsg("hint_none_locale_description", message.guild).format(getMsg("locale_name", message.guild), prefix), color=strToColor(config["color_warn"])), mention_author=False)
                         
                     else:
                         
@@ -313,7 +317,7 @@ async def on_message(message):
                             if locale_file[:-5] == fullcmd[1]:
                                 guildConfSet(message.guild, "locale", fullcmd[1])
                                 appendLog(f"Server's locale is now set to {fullcmd[1]}", message.guild)
-                                await message.channel.send(getMsg("locale_set", message.guild))
+                                await message.reply(embed=makeEmbed(title=getMsg("set_locale_title", message.guild), description=getMsg("set_locale_description", message.guild).format(getMsg("locale_name", message.guild)), color=strToColor(config["color_ok"])), mention_author=False)
                                 return
                          
                         locales = []
@@ -321,7 +325,7 @@ async def on_message(message):
                         for locale_file in os.listdir(f"{path}/locale/"):
                             locales.append(f"`{locale_file[:-5]}`")
                     
-                        await message.channel.send(getMsg("usage_locale", message.guild).format(prefix, ", ".join(locales)))
+                        await message.reply(embed=makeEmbed(title=getMsg("error_locale_title", message.guild), description=getMsg("error_locale_description", message.guild).format(prefix, ", ".join(locales)), color=strToColor(config["color_error"])), mention_author=False)
                     
                 except:
                     
@@ -330,28 +334,19 @@ async def on_message(message):
                     for locale_file in os.listdir(f"{path}/locale/"):
                         locales.append(f"`{locale_file[:-5]}`")
                     
-                    await message.channel.send(getMsg("usage_locale", message.guild).format(prefix, ", ".join(locales)))
+                    await message.reply(embed=makeEmbed(title=getMsg("error_locale_title", message.guild), description=getMsg("error_locale_description", message.guild).format(prefix, ", ".join(locales)), color=strToColor(config["color_error"])), mention_author=False)
                 
             else:
-                await message.channel.send(getMsg("command_forbidden", message.guild))
+                await message.reply(embed=makeEmbed(title=getMsg("forbidden_title", message.guild), description=getMsg("forbidden_description", message.guild), color=strToColor(config["color_error"])), mention_author=False)
             
         else:
-            await message.channel.send(getMsg("command_in_dm"))
+            await message.reply(embed=makeEmbed(title=getMsg("dm_title", message.guild), description=getMsg("dm_description", message.guild), color=strToColor(config["color_error"])), mention_author=False)
 
     elif message.content.startswith(f"{prefix}help"):
         
         gotCommand(message)
         
-        if message.author.id == config["owner"]:
-            if message.guild is not None:
-                await message.channel.send(await guildConfigured(message.guild) + getMsg("help", message.guild).format(getMsg("help_owner", message.guild).format(prefix), prefix, prefix, prefix, prefix, prefix))
-            else:
-                await message.channel.send(getMsg("help").format(getMsg("help_owner").format(prefix), prefix, prefix, prefix, prefix, prefix))
-        else:
-            if message.guild is not None:
-                await message.channel.send(await guildConfigured(message.guild) + getMsg("help", message.guild).format("", prefix, prefix, prefix, prefix))
-            else:
-                await message.channel.send(getMsg("help").format("", prefix, prefix, prefix, prefix))
+        await message.reply(embed=getHelpMessage(message, version, prefix=prefix), mention_author=False)
 
 #if loadJson("config.json")["auto_clear_trash"]:
     # run func

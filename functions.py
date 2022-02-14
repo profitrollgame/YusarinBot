@@ -85,6 +85,12 @@ def loadJson(filename):
         output = {}
     return output
 
+def colorToStr():
+    pass
+
+def strToColor(string):
+    return int(hex(int(string.replace("#", ""), 16)), 0)
+
 def gotCommand(message):
     global debug
     if debug:
@@ -150,11 +156,44 @@ def getMsg(string, guild=None):
         return locale["messages"][string]
     except Exception as exp:
         appendLog(f"Could not get locale string named {string} due to exception {exp}", guild)
-        return f"Could not get locale string {string}"
+        return string
 
-def getEmbed(string, guild=None):
-    # Feature coming soon
-    pass
+def makeEmbed(title="", description="", footer="", color=0xffffff):
+    embed=discord.Embed(title=title, description=description, color=color)
+    if footer is not None:
+        embed.set_footer(text=footer)
+    return embed
+
+def channelExists(number, guild, type="Any"):
+    global debug
+    if number == None:
+        return False
+    try:
+        if type == "Voice":
+            selected_channel = discord.utils.get(guild.channels, id=number)
+            if isinstance(selected_channel, discord.VoiceChannel):
+                return True
+        elif type == "Text":
+            selected_channel = discord.utils.get(guild.channels, id=number)
+            if isinstance(selected_channel, discord.TextChannel):
+                return True
+        elif type == "Any":
+            selected_channel = discord.utils.get(guild.channels, id=number)
+            return True
+    except Exception as exp:
+        if debug:
+            appendLog(f"Channel ID {str(number)} is not a channel due to {exp}")
+    return False
+
+def channelGetName(number, guild):
+    global debug
+    try:
+        selected_channel = discord.utils.get(guild.channels, id=number)
+        return selected_channel.name
+    except Exception as exp:
+        if debug:
+            appendLog(f"Channel ID {str(number)} is not a channel due to {exp}")
+    return "Channel doesn't exist"
 
 def isUserVoice(vc):
     global path
@@ -270,6 +309,49 @@ async def clearTrash(client):
 
 #async def autoClearTrash(client):
     # execute clearTrash every 120 seconds
+
+def getHelpMessage(message, version, prefix=loadJson("config.json")["bot_prefix"]):
+    
+    #channelExists(number, guild, type="Voice")
+    
+    config = loadJson("config.json")
+    
+    if message.guild is not None:
+        if channelExists(guildConfGet(message.guild, 'channel'), message.guild, type="Voice"):
+            desc_channel = getMsg("help_channel_set", guild=message.guild).format(channelGetName(guildConfGet(message.guild, 'channel'), message.guild))
+        else:
+            desc_channel = getMsg("help_channel_none", guild=message.guild)
+        
+        if channelExists(guildConfGet(message.guild, 'category'), message.guild, type="Any"):
+            desc_category = getMsg("help_category_set", guild=message.guild).format(channelGetName(guildConfGet(message.guild, 'category'), message.guild))
+        else:
+            desc_category = getMsg("help_category_none", guild=message.guild)
+        
+        desc_prefix = getMsg("help_prefix", guild=message.guild).format(prefix)
+        desc_locale = getMsg("help_locale", guild=message.guild).format(getMsg("locale_name", message.guild))
+
+        description = "\n".join([desc_prefix, desc_locale, desc_channel, desc_category])
+
+        embed=discord.Embed(title=getMsg("help_title", message.guild), description=description, color=strToColor(config["color_default"]))
+    else:
+        embed=discord.Embed(title=getMsg("help_title_dm", message.guild), color=strToColor(config["color_default"]))
+    
+    embed.set_author(name=f'{config["bot_name"]} v{str(version)}', url=config["bot_site"], icon_url=config["bot_icon"])
+    
+    if message.author.id == config["owner"]:
+        embed.add_field(name=f"{prefix}shutdown", value=getMsg("help_cmd_shutdown", message.guild), inline=False)
+    
+    embed.add_field(name=f"{prefix}channel ID", value=getMsg("help_cmd_channel", message.guild), inline=False)
+    embed.add_field(name=f"{prefix}category ID", value=getMsg("help_cmd_category", message.guild), inline=False)
+    embed.add_field(name=f"{prefix}prefix SYMBOL", value=getMsg("help_cmd_prefix", message.guild), inline=False)
+    embed.add_field(name=f"{prefix}locale LOCALE", value=getMsg("help_cmd_locale", message.guild), inline=False)
+    
+    if message.guild is None:
+        embed.set_footer(text=getMsg("help_server", message.guild))
+    else:
+        embed.set_footer(text=getMsg("help_notice_id", message.guild))
+    
+    return embed
 
 async def guildConfigured(guild):
 
