@@ -1,6 +1,6 @@
 # YusarinBot
 
-Simple, clear, easy, reliable.  
+Simple, easy to set up, yet reliable.  
 A specially designed bot for creating private voice channels on your Discord servers.  
 Installation instructions are listed below. Please, make sure you have installed dependencies before opening issue here.
 
