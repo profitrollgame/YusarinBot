@@ -1,8 +1,9 @@
+import gzip
 import os
 import sys
 import json
 import shutil
-import discord
+import discord # type: ignore
 
 from datetime import datetime
 from pathlib import Path
@@ -64,7 +65,7 @@ def appendLog(message, guild=None, announce=True):
 
     checkSize()
 
-    log = open(path + '/logs/latest.log', 'a')
+    log = open(path + '/logs/latest.log', 'a')  # type: ignore
     log.write(f'{message_formatted}\n')
     log.close()
 
@@ -310,46 +311,44 @@ async def clearTrash(client):
 #async def autoClearTrash(client):
     # execute clearTrash every 120 seconds
 
-def getHelpMessage(message, version, prefix=loadJson("config.json")["bot_prefix"]):
+def getHelpMessage(ctx, version):
     
     #channelExists(number, guild, type="Voice")
     
     config = loadJson("config.json")
     
-    if message.guild is not None:
-        if channelExists(guildConfGet(message.guild, 'channel'), message.guild, type="Voice"):
-            desc_channel = getMsg("help_channel_set", guild=message.guild).format(channelGetName(guildConfGet(message.guild, 'channel'), message.guild))
+    if ctx.guild is not None:
+        if channelExists(guildConfGet(ctx.guild, 'channel'), ctx.guild, type="Voice"):
+            desc_channel = getMsg("help_channel_set", guild=ctx.guild).format(channelGetName(guildConfGet(ctx.guild, 'channel'), ctx.guild))
         else:
-            desc_channel = getMsg("help_channel_none", guild=message.guild)
+            desc_channel = getMsg("help_channel_none", guild=ctx.guild)
         
-        if channelExists(guildConfGet(message.guild, 'category'), message.guild, type="Any"):
-            desc_category = getMsg("help_category_set", guild=message.guild).format(channelGetName(guildConfGet(message.guild, 'category'), message.guild))
+        if channelExists(guildConfGet(ctx.guild, 'category'), ctx.guild, type="Any"):
+            desc_category = getMsg("help_category_set", guild=ctx.guild).format(channelGetName(guildConfGet(ctx.guild, 'category'), ctx.guild))
         else:
-            desc_category = getMsg("help_category_none", guild=message.guild)
+            desc_category = getMsg("help_category_none", guild=ctx.guild)
         
-        desc_prefix = getMsg("help_prefix", guild=message.guild).format(prefix)
-        desc_locale = getMsg("help_locale", guild=message.guild).format(getMsg("locale_name", message.guild))
+        desc_locale = getMsg("help_locale", guild=ctx.guild).format(getMsg("locale_name", ctx.guild))
 
-        description = "\n".join([desc_prefix, desc_locale, desc_channel, desc_category])
+        description = "\n".join([desc_locale, desc_channel, desc_category])
 
-        embed=discord.Embed(title=getMsg("help_title", message.guild), description=description, color=strToColor(config["color_default"]))
+        embed=discord.Embed(title=getMsg("help_title", ctx.guild), description=description, color=strToColor(config["color_default"]))
     else:
-        embed=discord.Embed(title=getMsg("help_title_dm", message.guild), color=strToColor(config["color_default"]))
+        embed=discord.Embed(title=getMsg("help_title_dm", ctx.guild), color=strToColor(config["color_default"]))
     
     embed.set_author(name=f'{config["bot_name"]} v{str(version)}', url=config["bot_site"], icon_url=config["bot_icon"])
     
-    if message.author.id == config["owner"]:
-        embed.add_field(name=f"{prefix}shutdown", value=getMsg("help_cmd_shutdown", message.guild), inline=False)
+    if ctx.author.id == config["owner"]:
+        embed.add_field(name=f"/shutdown", value=getMsg("help_cmd_shutdown", ctx.guild), inline=False)
     
-    embed.add_field(name=f"{prefix}channel ID", value=getMsg("help_cmd_channel", message.guild), inline=False)
-    embed.add_field(name=f"{prefix}category ID", value=getMsg("help_cmd_category", message.guild), inline=False)
-    embed.add_field(name=f"{prefix}prefix SYMBOL", value=getMsg("help_cmd_prefix", message.guild), inline=False)
-    embed.add_field(name=f"{prefix}locale LOCALE", value=getMsg("help_cmd_locale", message.guild), inline=False)
+    embed.add_field(name=f"/channel set", value=getMsg("help_cmd_channel", ctx.guild), inline=False)
+    embed.add_field(name=f"/category set", value=getMsg("help_cmd_category", ctx.guild), inline=False)
+    embed.add_field(name=f"/locale set", value=getMsg("help_cmd_locale", ctx.guild), inline=False)
     
-    if message.guild is None:
-        embed.set_footer(text=getMsg("help_server", message.guild))
+    if ctx.guild is None:
+        embed.set_footer(text=getMsg("help_server", ctx.guild))
     else:
-        embed.set_footer(text=getMsg("help_notice_id", message.guild))
+        embed.set_footer(text=getMsg("help_notice_id", ctx.guild))
     
     return embed
 
@@ -358,26 +357,14 @@ async def guildConfigured(guild):
     output = {}
     config = loadJson("config.json")
 
-    for kind in ["channel", "category", "prefix"]:
+    for kind in ["channel", "category"]:
         if guildConfGet(guild, kind) is not None:
             try:
-                if kind == "channel":
-                    guild_object = discord.utils.get(guild.channels, id=guildConfGet(guild, kind))
-                    output[kind] = getMsg("configured_"+kind, guild).format(guild_object.name)
-                elif kind == "category":
-                    guild_object = discord.utils.get(guild.categories, id=guildConfGet(guild, kind))
-                    output[kind] = getMsg("configured_"+kind, guild).format(guild_object.name)
-                elif kind == "prefix":
-                    output[kind] = getMsg("info_prefix", guild).format(guildConfGet(guild, kind))
+                guild_object = discord.utils.get(guild.categories, id=guildConfGet(guild, kind))
+                output[kind] = getMsg("configured_"+kind, guild).format(guild_object.name)
             except Exception as exp:
-                if kind == "prefix":
-                    output[kind] = getMsg("info_prefix", guild).format(config["bot_prefix"])
-                else:
-                    output[kind] = getMsg("unconfigured_"+kind, guild)
-        else:
-            if kind == "prefix":
-                output[kind] = getMsg("info_prefix", guild).format(config["bot_prefix"])
-            else:
                 output[kind] = getMsg("unconfigured_"+kind, guild)
+        else:
+            output[kind] = getMsg("unconfigured_"+kind, guild)
 
-    return getMsg("server_config", guild).format(output["prefix"], getMsg("info_locale", guild).format(getMsg("locale_name", guild)), output["channel"], output["category"])
+    return getMsg("server_config", guild).format(getMsg("info_locale", guild).format(getMsg("locale_name", guild)), output["channel"], output["category"])
