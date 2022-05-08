@@ -48,6 +48,8 @@
         "forbidden_title": "🚫 Access Denied",
         "forbidden_description": "You must have **Administrator** right to set up private channels",
         "dm_title": "🚫 Execution error",
-        "dm_description": "Commands can only be executed while on the server"
+        "dm_description": "Commands can only be executed while on the server",
+        "admin_title": "🚫 Permission denied",
+        "admin_description": "You must be bot owner to perform this"
     }
 }
