@@ -4,6 +4,8 @@ Simple, easy to set up, yet reliable.
 A specially designed bot for creating private voice channels on your Discord servers.  
 Installation instructions are listed below. Please, make sure you have installed dependencies before opening issue here.
 
+> Since version 1.5 only slash commands are supported. If you'd like to use old-fashioned commands and commands prefix feature – consider installing [1.4 version](https://github.com/profitrollgame/YusarinBot/releases/tag/v1.4) which is the last one compatible with those.
+
 ## Installation (Short)
 1. `git clone https://github.com/profitrollgame/YusarinBot`
 2. `cd YusarinBot`
