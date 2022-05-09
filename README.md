@@ -46,4 +46,4 @@ Default configuration file is [available here](https://github.com/profitrollgame
 
 ## Extra
 1. Bot doesn't have any self updaters **yet**
-2. You can add public version of the bot to your Discord server using this link: https://discord.com/api/oauth2/authorize?client_id=937839388853944390&permissions=318769168&scope=bot
+2. You can add public version of the bot to your Discord server using this link: https://www.end-play.xyz/yusarin/invite
