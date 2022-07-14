@@ -1,3 +1,6 @@
+## ⚠ Repo has moved and all the updates will be available [here](https://git.end-play.xyz/profitroll/YusarinBot) instead  
+This page will no longer be updated and maintained.
+
 # YusarinBot
 
 Simple, easy to set up, yet reliable.  
