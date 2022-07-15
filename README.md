@@ -7,10 +7,10 @@ Simple, easy to set up, yet reliable.
 A specially designed bot for creating private voice channels on your Discord servers.  
 Installation instructions are listed below. Please, make sure you have installed dependencies before opening issue here.
 
-> Since version 1.5 only slash commands are supported. If you'd like to use old-fashioned commands and commands prefix feature – consider installing [1.4 version](https://github.com/profitrollgame/YusarinBot/releases/tag/v1.4) which is the last one compatible with those.
+> Since version 1.5 only slash commands are supported. If you'd like to use old-fashioned commands and commands prefix feature – consider installing [1.4 version](https://git.end-play.xyz/profitroll/YusarinBot/releases/tag/v1.4) which is the last one compatible with those.
 
 ## Installation (Short)
-1. `git clone https://github.com/profitrollgame/YusarinBot`
+1. `git clone https://git.end-play.xyz/profitroll/YusarinBot`
 2. `cd YusarinBot`
 3. `pip install -r requirements.txt`
 4. `nano config.json`
@@ -18,7 +18,7 @@ Installation instructions are listed below. Please, make sure you have installed
 
 ## Installation (Detailed)
 1. Download and install Python 3 (3.6+ should be fine)
-2. Download bot's release: https://github.com/profitrollgame/YusarinBot/releases/latest
+2. Download bot's release: https://git.end-play.xyz/profitroll/YusarinBot/releases/latest
 3. Unpack your archive to folder. Name it YusarinBot for example
 4. Change working directory using `cd YusarinBot` or `cd FolderYouHaveCreated`
 5. Run `pip install -r requirements.txt` to install dependencies
@@ -31,7 +31,7 @@ Installation instructions are listed below. Please, make sure you have installed
 12. Bot is ready! Run it using `python yusarin.py`
 
 ## Config explanation
-Default configuration file is [available here](https://github.com/profitrollgame/YusarinBot/blob/main/config.json)
+Default configuration file is [available here](https://git.end-play.xyz/profitroll/YusarinBot/blob/main/config.json)
 - "debug" - Option that enables more detailed log messages [Boolean]
 - "owner" - Discord ID of user who will be able to execute admin commands (`$shutdown` for example) [Integer]
 - "bot_name" - Name of your bot. Is not used anywhere yet [String]
